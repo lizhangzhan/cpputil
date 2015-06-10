@@ -1,47 +1,43 @@
-#ifndef SIMHASH_THREADPOOL_H_
-#define SIMHASH_THREADPOOL_H_
+#ifndef CPPUTIL_THREADPOOL_H_
+#define CPPUTIL_THREADPOOL_H_
 #include <deque>
 #include <vector>
 
 #include "util.h"
-namespace simhash {
+namespace cpputil {
 
 typedef struct task_t {
   void (*func)(void*);
   void* arg;
 } Task;
 
-enum ErrorType {
-  kFullQueueType = 1;
-};
-
 class ThreadPool {
  public:
-  ThreadPool(size_t thread_num, size_t queue_size) : thread_num_(thread_num), queue_size_(queue_size) {
-    mu_ = util::Mutex();
-    cond_ = util::CondVar(&mu_);
-    waitTaskNum_ = 0;
+  ThreadPool(size_t threadNum, size_t queueSize) : poolThreadNum_(threadNum), maxQueueSize_(queueSize) {
+    mu_ = new util::Mutex();
+    notEmptyCond_ = new util::CondVar(mu_);
+    notFullCond_ = new util::CondVar(mu_);
     joining = false;
   }
   ~ThreadPool();
-  AddTask(void (*func)(void*), void* arg, size_t timeout=5);
-  JoinThreads(bool waitTasks=true, bool waitThreads=true);
-  RunThread();
+  bool AddTask(void (*func)(void*), void* arg, size_t timeout=0);
+  void RunThread();
+  bool JoinThreads(bool waitTasks=true);
 
  private:
-  std::deque<Task> tasks_;
+  std::deque<Task*> tasks_;
   std::vector<pthread_t> threads_;
   util::Mutex* mu_;
-  util::CondVar* cond_;
-  size_t thread_num_;
-  size_t queue_size_;
-  size_t avail_thread_num_;
+  util::CondVar* notEmptyCond_;
+  util::CondVar* notFullCond_;
+  size_t poolThreadNum_;
+  size_t maxQueueSize_;
   bool joining;
 
   // no copying
   ThreadPool(const ThreadPool&);
   void operator=(const ThreadPool&);
-}
-}// namespace simhash 
+}; // class ThreadPool
 
-#endif // SIMHASH_THREADPOOL_H
+}// namespace cpputil
+#endif // CPPUTIL_THREADPOOL_H_

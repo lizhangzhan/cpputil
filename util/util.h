@@ -1,5 +1,5 @@
-#ifndef SIMHASH_UTIL_H_
-#define SIMHASH_UTIL_H_
+#ifndef CPPUTIL_UTIL_H_
+#define CPPUTIL_UTIL_H_
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -13,7 +13,7 @@
 #include <string>
 #include <sstream>
 
-namespace simhash {
+namespace cpputil {
 namespace util {
 
 class CondVar;
@@ -112,5 +112,5 @@ inline uint64_t ConvertToUint64(const char* cstr) {
   return strtoull(cstr, &end, 16);
 }
 } // namespace util
-}// namespace simhash
-#endif // SIMHASH_UTIL_H_
+}// namespace cpputil
+#endif // CPPUTIL_UTIL_H_
