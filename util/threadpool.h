@@ -4,12 +4,10 @@
 #include <vector>
 
 #include "util.h"
+
 namespace cpputil {
 
-typedef struct task_t {
-  void (*func)(void*);
-  void* arg;
-} Task;
+typedef struct Task Task;
 
 class ThreadPool {
  public:
@@ -22,7 +20,7 @@ class ThreadPool {
   ~ThreadPool();
   bool AddTask(void (*func)(void*), void* arg, size_t timeout=0);
   void RunThread();
-  bool JoinThreads(bool waitTasks=true);
+  bool JoinThreads(bool waitTasks=false);
 
  private:
   std::deque<Task*> tasks_;

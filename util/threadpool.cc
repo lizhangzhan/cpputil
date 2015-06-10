@@ -6,6 +6,10 @@
 #include <assert.h>
 
 namespace cpputil {
+struct Task {
+  void (*func)(void*);
+  void* arg;
+};
 
 static void* RunThreadWrapper(void *arg);
 
@@ -31,7 +35,6 @@ bool ThreadPool::AddTask(void (*func)(void*), void* arg, size_t timeout) {
   }
   if (tasks_.empty()) {
     notEmptyCond_->Signal();
-    //fprintf(stderr, "broadcasting all waiting threads\n");
   }
   Task* t = new Task;
   t->func = func;
@@ -48,17 +51,14 @@ static void* RunThreadWrapper(void *arg) {
 
 void ThreadPool::RunThread() {
   // backgroud thread, keep running
-  //fprintf(stderr, "runing thread\n");
   while (true) {
     mu_->Lock();
     while (tasks_.empty()) {
       if (joining) {
         mu_->Unlock();
-        //fprintf(stderr, "joining thread\n");
-        return;
+        pthread_exit(NULL);
       }
       notEmptyCond_->Wait();
-      //fprintf(stderr, "wait for task\n");
     }
     if (tasks_.size() == maxQueueSize_) {
       notFullCond_->Signal();
@@ -78,16 +78,10 @@ bool ThreadPool::JoinThreads(bool waitTasks) {
     return false;
   }
 
-  if (waitTasks) {
-    while (!tasks_.empty()) {
-      usleep(0.1);
-    }
-  }
   mu_->Lock();
   joining = true;
   mu_->Unlock();
   // wake up all waiting threads 
-  fprintf(stderr, "broadcasting all threads to join\n");
   notEmptyCond_->SignalAll();
   int status;
   for (int i = 0; i < threads_.size(); i++) {
@@ -96,6 +90,5 @@ bool ThreadPool::JoinThreads(bool waitTasks) {
        fprintf(stderr, "fail to join thread %s\n", strerror(status));
      }
   }
-  fprintf(stderr, "joined threads");
 }
 } // namespace cpputil
